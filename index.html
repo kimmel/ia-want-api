@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Internet Archive: Do we want this book API</title>
+
+<link rel='stylesheet' href='style.css'/>
+</head>
+
+<body>
+
+This is the 4th draft. I expect two more before it is finalized.
+
+<h1>Internet Archive: Do we want this book?</h1>
+<p>This application programming interface (API) is a single endpoint which returns the Internet Archive&#39;s status on whether or not they need a book for their collection. Books are identified by their ISBN.</p>
+<h2>Request Format</h2>
+<p><code>GET http://want.archive.org/api?isbn=id</code></p>
+<p><code>id</code> is an ISBN10 or ISBN13 value with or without dashes.</p>
+<h3>Optional Parameters</h3>
+<p>Add <code>&amp;human</code> to the end of your request for a human readable response.</p>
+<p>Add <code>&amp;image</code> to the end of your request to return the cover of the book if available or an image response. Note: <code>&amp;image</code> overrides <code>&amp;human</code> if they are both used in a query string.</p>
+<p><code>GET http://want.archive.org/api?isbn=id&amp;human</code></p>
+<p><code>GET http://want.archive.org/api?isbn=id&amp;image</code></p>
+<h2>JSON response definition:</h2>
+<h3>status</h3>
+<table>
+<thead>
+<tr>
+<th align="left">value</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>fail</strong></td>
+<td align="left">We failed to process the request. The submitted ISBN was invalid.</td>
+</tr>
+<tr>
+<td align="left"><strong>success</strong></td>
+<td align="left">The request was serviced successfully.</td>
+</tr>
+</tbody>
+</table>
+<h3>result</h3>
+<table>
+<thead>
+<tr>
+<th align="left">value</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>-1</strong></td>
+<td align="left">We failed to process the request. The submitted ISBN was invalid.</td>
+</tr>
+<tr>
+<td align="left"><strong>0</strong></td>
+<td align="left">The request was serviced successfully, but we have two copies, and do not want more.</td>
+</tr>
+<tr>
+<td align="left"><strong>1</strong></td>
+<td align="left">The request was serviced successfully, and we have no copies. We want it.</td>
+</tr>
+<tr>
+<td align="left"><strong>2</strong></td>
+<td align="left">The request was serviced successfully, and we have 1 copy already. We want it.</td>
+</tr>
+</tbody>
+</table>
+<h3>description</h3>
+<p>  A &quot;human-parsable&quot; description field</p>
+<pre><code>failure
+do_not_want
+want_for_ia_pa [needs example]
+want_for_alt_pa</code></pre>
+<h3>identifier</h3>
+<p>  String when result = 2. This is the identifier already assigned on the cluster for that ISBN</p>
+<table>
+<thead>
+<tr>
+<th align="left">value</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">-1</td>
+<td align="left">No identifier designated for this ISBN.</td>
+</tr>
+<tr>
+<td align="left">string</td>
+<td align="left">Designated identifier for this ISBN.</td>
+</tr>
+</tbody>
+</table>
+<h2>Examples:</h2>
+<h3>Successful requests</h3>
+<p><code>curl http://want.archive.org/api?isbn=1930841426</code></p>
+<pre style="background:#fdf6e3;color:#586e75">{
+
+    <span style="color:#269186"><span style="color:#c60000">"</span>status<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>success<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>result<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>0<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>description<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>do_not_want<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>identifier<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>mozartsmagicflut00burt<span style="color:#c60000">"</span></span>
+
+}
+</pre>
+
+<p><code>&amp;human</code> response - We already have two copies, and don&#39;t need anymore. Thanks anyway!</p>
+<p><code>curl http://want.archive.org/api?isbn=9780452295971</code></p>
+<pre style="background:#fdf6e3;color:#586e75">{
+
+    <span style="color:#269186"><span style="color:#c60000">"</span>status<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>success<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>result<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>2<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>description<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>want_for_alt_pa<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>identifier<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>esquarednovel00matt<span style="color:#c60000">"</span></span>
+
+}
+</pre>
+
+<p><code>curl http://want.archive.org/api?isbn=9780452295971&amp;human</code> response - We&#39;ve scanned this book, and have a copy, but we need another. Please send it to us!</p>
+<h3>Failed request</h3>
+<p><code>curl http://want.archive.org/api?isbn=9781416913849f</code></p>
+<pre style="background:#fdf6e3;color:#586e75">{
+
+    <span style="color:#269186"><span style="color:#c60000">"</span>status<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>fail<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>result<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>-1<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>description<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>failure<span style="color:#c60000">"</span></span>,
+    <span style="color:#269186"><span style="color:#c60000">"</span>identifier<span style="color:#c60000">"</span></span>: <span style="color:#269186"><span style="color:#c60000">"</span>-1<span style="color:#c60000">"</span></span>
+
+}
+</pre>
+
+<p><code>curl http://want.archive.org/api?isbn=9781416913849f&amp;human</code> - We couldn&#39;t process the request. Please feed us valid ISBNs!</p>
+<h3>HTTP Response header</h3>
+<pre><code>HTTP/1.1 200 OK
+Server: nginx/1.3.4
+Date: Fri, 13 Sep 2013 11:11:32 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/5.3.10-1ubuntu3.2</code></pre>
+
+
+
+
+</body>
+</html>
